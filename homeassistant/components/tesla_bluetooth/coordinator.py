@@ -60,7 +60,7 @@ class TesleBluetoothCoordinators:
         hass: HomeAssistant,
         entry: TeslaBluetoothConfigEntry,
         vehicle: VehicleBluetooth,
-    ):
+    ) -> None:
         """Initialize all coordinators."""
         self.state = TeslaBluetoothStateCoordinator(hass, entry, vehicle, self)
         self.charge = TeslaBluetoothChargeCoordinator(hass, entry, vehicle, self)
@@ -122,13 +122,17 @@ class TeslaBluetoothCoordinator(TimestampDataUpdateCoordinator[_T], Generic[_T])
     async def _async_update_data(self) -> _T:
         """Get data from Tesla Bluetooth."""
         LOGGER.info(
-            f"Updating {self.kind} data. Connected: {self.vehicle.client.is_connected}, Awake: {self.coordinators.state.data.vehicleSleepStatus}"
+            f"Updating {self.kind} data. Connected: {self.vehicle.client.is_connected}"
         )
 
         if not self.vehicle.client.is_connected:
-            await self.vehicle.client.connect()
+            await self.vehicle.connect()
             # raise UpdateFailed("Disconnected")
-        if self.need_awake and self.coordinators.state.data.vehicleSleepStatus != 1:
+        if (
+            self.need_awake
+            and self.coordinators.state.data is not None
+            and self.coordinators.state.data.vehicleSleepStatus != 1
+        ):
             raise UpdateFailed("Vehicle is sleeping")
         try:
             data = await self._async_update_function(self.vehicle)

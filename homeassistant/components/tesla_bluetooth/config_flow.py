@@ -11,7 +11,7 @@ from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
-    BluetoothServiceInfo,
+    BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,22 +31,17 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tesla Bluetooth."""
 
     VERSION = 1
-    _discovered_device: BluetoothServiceInfo | None = None
+    _discovered_device: BluetoothServiceInfoBleak | None = None
     _vehicle: VehicleBluetooth | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
-        LOGGER.debug(
-            "Discovered BT device: %s @ %s with %s",
-            discovery_info.name,
-            discovery_info.address,
-            discovery_info.service_uuids,
-        )
+
         # if(SERVICE_UUID not in discovery_info.service_uuids):
         if not validate(discovery_info.name) and not discovery_info.name.startswith(
             "🔑"
@@ -86,11 +81,13 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(discovery_info.address)
                     self._abort_if_unique_id_configured()
                     interface = TeslaBluetooth()
-                    await interface.get_private_key(self.hass.config.path("tesla_fleet.key"))
+                    await interface.get_private_key(
+                        self.hass.config.path(PRIVATE_KEY_FILE)
+                    )
                     self._vehicle = interface.vehicles.createBluetooth(
                         vin, device=discovery_info.device
                     )
-                    await self._vehicle.connect()
+                    await self._vehicle.connect(device=discovery_info.device)
                     return await self.async_step_check()
             errors["base"] = "not_found"
 
@@ -111,17 +108,13 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._vehicle is not None
         assert self._discovered_device is not None
 
-        ready = False
         try:
-            ready = await self._vehicle.handshakeVehicleSecurity()
+            await self._vehicle.handshakeVehicleSecurity()
         except NotOnWhitelistFault:
             return await self.async_step_instructions()
         except TeslaFleetError as err:
             LOGGER.error("Failed to connect to vehicle: %s", err)
             self.async_abort(reason="unknown_error")
-
-        if not ready:
-            return await self.async_step_instructions()
 
         return self.async_create_entry(
             title=self._vehicle.vin,
@@ -149,7 +142,7 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._vehicle is not None
 
         for i in range(10):
-            LOGGER.debug("Attempt %s to pair vehicle", i)
+            LOGGER.debug("Attempt %s to pair vehicle", i + 1)
             try:
                 await self._vehicle.pair()
                 return await self.async_step_check()
