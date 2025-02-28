@@ -47,6 +47,14 @@ CHARGE_DESCRIPTIONS: tuple[TeslaBluetoothChargeSensorEntityDescription, ...] = (
     ),
 )
 
+
+@dataclass(frozen=True, kw_only=True)
+class TeslaFleetSensorEntityDescription(SensorEntityDescription):
+    """Describes Tesla Fleet Sensor entity."""
+
+    value_fn: Callable[[ChargeState], StateType]
+
+
 VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
     TeslaFleetSensorEntityDescription(
         key="charge_state_battery_level",

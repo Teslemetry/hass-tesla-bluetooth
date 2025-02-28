@@ -62,7 +62,9 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             "Ready to setup: %s @ %s", discovery_info.name, discovery_info.address
         )
 
-        self.context["title_placeholders"] = {"name": discovery_info.name}
+        self.context["title_placeholders"] = {
+            "name": discovery_info.name.replace("🔑", "")
+        }
         self._discovered_device = discovery_info
 
         return await self.async_step_user()
@@ -76,10 +78,13 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             vin = user_input[CONF_VIN]
             name = "S" + hashlib.sha1(vin.encode("utf-8")).hexdigest()[:16]
             for discovery_info in async_discovered_service_info(self.hass):
-                if discovery_info.name.startswith(name):
+                if discovery_info.name.startswith(
+                    name
+                ) or discovery_info.name.startswith("🔑"):
                     self._discovered_device = discovery_info
                     await self.async_set_unique_id(discovery_info.address)
                     self._abort_if_unique_id_configured()
+
                     interface = TeslaBluetooth()
                     await interface.get_private_key(
                         self.hass.config.path(PRIVATE_KEY_FILE)
@@ -87,7 +92,8 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._vehicle = interface.vehicles.createBluetooth(
                         vin, device=discovery_info.device
                     )
-                    await self._vehicle.connect(device=discovery_info.device)
+                    await self._vehicle.connect()
+
                     return await self.async_step_check()
             errors["base"] = "not_found"
 
@@ -146,6 +152,7 @@ class TeslaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._vehicle.pair()
                 return await self.async_step_check()
+            # Make this more specific
             except TeslaFleetError as err:
                 LOGGER.error("Failed to pair vehicle: %s", err)
 

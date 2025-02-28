@@ -7,7 +7,10 @@ from bleak_retry_connector import close_stale_connections_by_address
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.tesla.vehicle.vehicles import VehicleBluetooth
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_get_scanner,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -15,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PRIVATE_KEY_FILE
+from .const import DOMAIN, LOGGER, PRIVATE_KEY_FILE
 from .coordinator import TesleBluetoothCoordinators
 from .models import TeslaBluetoothData
 
@@ -39,26 +42,31 @@ async def async_setup_entry(
 ) -> bool:
     """Set up the Tesla Bluetooth configuration."""
 
+    parent: TeslaBluetooth = hass.data[DOMAIN]
+    vehicle: VehicleBluetooth = parent.vehicles.createBluetooth(entry.data["vin"])
+
     address = entry.data["address"]
     await close_stale_connections_by_address(address)
 
-    ble_device = async_ble_device_from_address(hass, address)
+    ble_device = async_ble_device_from_address(hass, address, True)
+    if not ble_device:
+        LOGGER.warning(
+            "Could not find Tesla vehicle with address %s, running scan.", address
+        )
+        # Do an active scan to find the device
+        ble_device = await async_get_scanner(hass).find_device_by_address(address)
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Tesla vehicle with address {address}"
         )
-
-    parent: TeslaBluetooth = hass.data[DOMAIN]
-    vehicle: VehicleBluetooth = parent.vehicles.createBluetooth(
-        entry.data["vin"], device=ble_device
-    )
-    coordinators = TesleBluetoothCoordinators(hass, entry, vehicle)
+    vehicle.set_device(ble_device)
 
     try:
-        await vehicle.connect(device=ble_device, max_attempts=10)
+        await vehicle.connect(max_attempts=10)
     except BleakError as e:
         raise ConfigEntryNotReady(f"Failed to connect to Tesla vehicle: {e}") from e
 
+    coordinators = TesleBluetoothCoordinators(hass, entry, vehicle)
     await coordinators.state.async_config_entry_first_refresh()
     # Force the state coordinator to update even without entities
     coordinators.state.async_add_listener(lambda *_: None)

@@ -3,7 +3,7 @@
 import logging
 
 DOMAIN = "tesla_bluetooth"
-PRIVATE_KEY_FILE = "tesla_key.pem"
+PRIVATE_KEY_FILE = "tesla_bluetooth.key"
 LOGGER = logging.getLogger(__package__)
 MANUFACTURER_ID = 76
 SERVICE_UUID = "00001122-0000-1000-8000-00805f9b34fb"

@@ -13,5 +13,5 @@
   "iot_class": "local_polling",
   "loggers": ["tesla-fleet-api"],
   "quality_scale": "bronze",
-  "requirements": ["tesla-fleet-api==1.0.7"]
+  "requirements": ["tesla-fleet-api==1.0.8"]
 }
