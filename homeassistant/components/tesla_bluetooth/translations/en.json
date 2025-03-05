@@ -26,6 +26,13 @@
             },
             "user": {
                 "data": {
+                    "address": "Address"
+                },
+                "description": "If nothing is discovered, ensure you are within Bluetooth range, and ensure your vehicle has less than three active BLE connections (Tesla Apps, Apple Watchs, Powerwalls with Charge On Solar).",
+                "title": "Discover Vehicle"
+            },
+            "vin": {
+                "data": {
                     "vin": "VIN"
                 },
                 "description": "The Vehicle Identification Number is required for the Tesla Command Protocol. You can find your VIN in your vehicle service screen or at the bottom of the Tesla app",

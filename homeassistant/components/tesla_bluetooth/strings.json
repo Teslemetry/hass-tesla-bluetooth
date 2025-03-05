@@ -3,6 +3,13 @@
     "flow_title": "{name}",
     "step": {
       "user": {
+        "title": "Discover Vehicle",
+        "description": "If nothing is discovered, ensure you are within Bluetooth range, and ensure your vehicle has less than three active BLE connections (Tesla Apps, Apple Watchs, Powerwalls with Charge On Solar).",
+        "data": {
+          "address": "Address"
+        }
+      },
+      "vin": {
         "title": "Enter VIN",
         "description": "The Vehicle Identification Number is required for the Tesla Command Protocol. You can find your VIN in your vehicle service screen or at the bottom of the Tesla app",
         "data": {
