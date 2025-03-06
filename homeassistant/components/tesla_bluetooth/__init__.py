@@ -25,7 +25,11 @@ from .models import TeslaBluetoothData
 type TeslaBluetoothConfigEntry = ConfigEntry[TeslaBluetoothData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.NUMBER]  # Platform.SENSOR
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
+]  # Platform.SENSOR
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -70,6 +74,13 @@ async def async_setup_entry(
     await coordinators.state.async_config_entry_first_refresh()
     # Force the state coordinator to update even without entities
     coordinators.state.async_add_listener(lambda *_: None)
+
+    # Wake up the vehicle if it is asleep
+    if coordinators.state.data.vehicleSleepStatus != 1:
+        try:
+            await vehicle.wake_up()
+        except TimeoutError:
+            LOGGER.warning("Failed to wake up Tesla vehicle")
 
     entry.runtime_data = TeslaBluetoothData(vehicle, coordinators)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

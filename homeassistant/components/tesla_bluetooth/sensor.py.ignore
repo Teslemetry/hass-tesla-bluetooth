@@ -43,7 +43,7 @@ CHARGE_DESCRIPTIONS: tuple[TeslaBluetoothChargeSensorEntityDescription, ...] = (
         key="charge_state_charging_state",
         options=list(CHARGE_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: ChargeState(x.charging_state),
+        value_fn=lambda x: str(x.charging_state),
     ),
 )
 

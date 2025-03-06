@@ -3,10 +3,10 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "title": "Discover Vehicle",
+        "title": "Discovered vehicles",
         "description": "If nothing is discovered, ensure you are within Bluetooth range, and ensure your vehicle has less than three active BLE connections (Tesla Apps, Apple Watchs, Powerwalls with Charge On Solar).",
         "data": {
-          "address": "Address"
+          "address": "Vehicles"
         }
       },
       "vin": {
@@ -16,16 +16,9 @@
           "vin": "VIN"
         }
       },
-      "bluetooth_confirm": {
-        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
-      },
       "instructions": {
         "title": "Authorize key",
         "description": "After clicking submit, place your keycard on the reader inside your vehicle until you get a prompt to authorize the key on the screen. You may want to go into keys (in settings) to rename the key after authorizing it."
-      },
-      "authorize": {
-        "title": "Waiting for authorization",
-        "description": "Enter your vehicle and place a keycard on the reader until you get a prompt to authorize the key on the screen. You may want to go into keys (in settings) to rename the key after authorizing it."
       }
     },
     "abort": {

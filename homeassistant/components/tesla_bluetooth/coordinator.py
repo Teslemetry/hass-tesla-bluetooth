@@ -125,16 +125,16 @@ class TeslaBluetoothCoordinator(TimestampDataUpdateCoordinator[_T], Generic[_T])
             f"Updating {self.kind} data. Connected: {self.vehicle.client.is_connected}"
         )
 
-        if not self.vehicle.client.is_connected:
-            await self.vehicle.connect()
-            # raise UpdateFailed("Disconnected")
-        if (
-            self.need_awake
-            and self.coordinators.state.data is not None
-            and self.coordinators.state.data.vehicleSleepStatus != 1
+        # if not self.vehicle.client.is_connected:
+        # await self.vehicle.connect()
+        # raise UpdateFailed("Disconnected")
+        if self.need_awake and (
+            self.coordinators.state.data is None
+            or self.coordinators.state.data.vehicleSleepStatus != 1
         ):
             raise UpdateFailed("Vehicle is sleeping")
         try:
+            await self.vehicle.connect_if_needed()
             data = await self._async_update_function(self.vehicle)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err

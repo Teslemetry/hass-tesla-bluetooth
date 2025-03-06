@@ -2870,7 +2870,7 @@ temperusb==1.6.1
 # tensorflow==2.5.0
 
 # homeassistant.components.tesla_bluetooth
-tesla-fleet-api==1.0.10
+tesla-fleet-api==1.0.12
 
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry

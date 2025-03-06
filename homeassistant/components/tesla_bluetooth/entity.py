@@ -10,7 +10,7 @@ from .const import DOMAIN, LOGGER
 from .coordinator import TeslaBluetoothCoordinator, TeslaBluetoothStateCoordinator
 from .models import TeslaBluetoothData
 
-_C = TypeVar("_C", default=TeslaBluetoothCoordinator)
+_C = TypeVar("_C", bound=TeslaBluetoothCoordinator)
 
 
 class TeslaBluetoothEntity(CoordinatorEntity[_C], Generic[_C]):
@@ -54,7 +54,7 @@ class TeslaBluetoothEntity(CoordinatorEntity[_C], Generic[_C]):
         """Update the attributes of the entity."""
 
     @property
-    def asleep(self) -> bool:
+    def awake(self) -> bool:
         """Return if the vehicle is asleep."""
         return (
             self.coordinators.state.data.vehicleSleepStatus == 1
@@ -62,7 +62,7 @@ class TeslaBluetoothEntity(CoordinatorEntity[_C], Generic[_C]):
 
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if it is asleep."""
-        if not self.asleep:
+        if self.awake:
             result = await self.vehicle.wake_up()
             LOGGER.debug("Wake up result: %s", result)
 
